@@ -1,6 +1,4 @@
 LAB_4._libArToolkitSource = new THREEx.ArToolkitSource({
-    displayWidth: window.innerWidth, // 1640,
-    displayHeight:  window.innerHeight, // 780,
     sourceType: CONSTANTS.SOURCE_TYPE
 });
 
