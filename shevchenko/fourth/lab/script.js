@@ -61,7 +61,7 @@ var markerRoot = new THREE.Group
 scene.add(markerRoot)
 var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
     type: 'pattern',
-    patternUrl: 'PATTERN/pattern-pattern2.patt'
+    patternUrl: 'PATTERN/Shevchenko_lab4.patt'
 })
 
 var smoothedRoot = new THREE.Group()
