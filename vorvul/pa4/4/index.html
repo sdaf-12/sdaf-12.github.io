@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>WEBGL (Three.js) Richmond Minimal Surfaces</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: white;
+            margin: 0px;
+        }
+    </style>
+</head>
+<body>
+<h1>Richmond Minimal Surface</h1>
+<center>
+    <div id="container" style="width: 75%; height: 75%;"></div>
+</center>
+<script src="lib/dat.gui.min.js"></script>
+<script src='lib/THREE/three.min.js'></script>
+<script src="lib/AR/ar.js"></script>
+<script>
+
+    var surface;
+
+    var sin = Math.sin, cos = Math.cos, pi = Math.PI;
+
+    var radius = .5;
+
+    var dat_;
+
+
+    //GUI
+    var datField = function () {
+        this.message = "Richmond Minimal Surface";
+        this.radius = 0.5;
+    };
+
+    //GUI
+    window.onload = function () {
+        dat_ = new datField();
+        setValue();
+
+        // GUI deviceOrientControls...
+        var gui = new dat.GUI();
+        gui.width = 300;
+        gui.add(dat_, "message").name("");
+        gui.add(dat_, "radius").min(0).max(1).name("Portion shown").onChange(setValue);
+    };
+
+
+    function setValue() {
+        radius = dat_.radius;
+        updateSurface();
+    }
+
+
+    /**
+     * dat GUI callback
+     */
+    function updateSurface() {//function to initialise and update surf.
+        arWorldRoot.remove(surface);
+        var geo = new THREE.ParametricGeometry(richmond, 45, 65);
+        var mat =       new THREE.MeshPhongMaterial({
+            specular: 0xaaaafff,
+            color: 0x3399ff,
+            shininess: 40,
+            metal: true,
+            transparent: true,
+            opacity:0.8
+        });
+        mat.side = THREE.DoubleSide;
+
+        surface = new THREE.Mesh(geo, mat);
+        arWorldRoot.add(surface);
+    }
+
+    function richmond(r, t, vec) {
+        rho = (1 + 3 * radius) * r - 2 - radius;
+        var u = Math.exp(rho) * Math.cos(2 * pi * t);
+        var v = Math.exp(rho) * Math.sin(2 * pi * t);
+
+        x = -u / (u * u + v * v) - u * u * u / 3 + u * v * v;
+        y = -v / (u * u + v * v) - u * u * v + v * v * v / 3;
+        z = 2 * u;
+        vec.set(y / 6, z / 6, -x / 6);
+    }
+
+
+    var onRenderFcts = [];
+    var container, stats;
+    var renderer;
+    var scene;
+    var camera;
+    var arToolkitSource;
+    var arToolkitContext;
+    var markerRoot;
+    var artoolkitMarker;
+    var smoothedRoot ;
+    var smoothedControls;
+    var arWorldRoot;
+
+
+    init();
+    var lastTimeMsec = null;
+    animate_(lastTimeMsec);
+
+
+    function renderFigure() {
+        var geometry = new THREE.ParametricGeometry(richmond, 200, 200);
+        var material =
+            new THREE.MeshPhongMaterial({
+                specular: 0xaaaafff,
+                color: 0x3399ff,
+                shininess: 40,
+                metal: true,
+                transparent: true,
+                opacity:0.8
+            });
+        material.side = THREE.DoubleSide;
+
+        surface = new THREE.Mesh(geometry, material);
+        arWorldRoot.add(surface);
+    }
+
+    function initThreeCtx() {
+        renderer = new THREE.WebGLRenderer({
+            alpha: true
+        });
+        renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.style.position = 'absolute'
+        renderer.domElement.style.top = '0px'
+        renderer.domElement.style.left = '0px'
+        document.body.appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(120, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.z = 6;
+        scene.add(camera);
+    }
+
+    function populateMarker() {
+        markerRoot = new THREE.Group;
+        scene.add(markerRoot);
+        artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+            type: 'pattern',
+            patternUrl: 'marker/pattern-1.patt'
+        })
+    }
+
+    function init() {
+
+
+        radius = .5;
+
+        initThreeCtx();
+
+        arToolkitSource = new THREEx.ArToolkitSource({
+            sourceType: 'webcam',
+        })
+
+        arToolkitSource.init(function onReady() {
+            onResize()
+        })
+
+        // handle resize
+        window.addEventListener('resize', function () {
+            onResize()
+        })
+
+
+        function onResize() {
+            arToolkitSource.onResizeElement()
+            arToolkitSource.copyElementSizeTo(renderer.domElement)
+            if (arToolkitContext.arController !== null) {
+                arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
+            }
+        }
+
+       arToolkitContext = new THREEx.ArToolkitContext({
+            cameraParametersUrl: 'lib/AR/camera-para.dat',
+            detectionMode: 'mono',
+            maxDetectionRate: 30,
+            canvasWidth: 80 * 3,
+            canvasHeight: 60 * 3,
+        })
+        arToolkitContext.init(function onCompleted() {
+            camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+        })
+
+        onRenderFcts.push(function () {
+            if (arToolkitSource.ready === false) return
+
+            arToolkitContext.update(arToolkitSource.domElement)
+        })
+
+
+        populateMarker();
+
+        smoothedRoot = new THREE.Group()
+        scene.add(smoothedRoot)
+        smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
+            lerpPosition: 0.4,
+            lerpQuaternion: 0.3,
+            lerpScale: 1,
+        })
+        onRenderFcts.push(function (delta) {
+            smoothedControls.update(markerRoot)
+        })
+
+        arWorldRoot = smoothedRoot;
+
+        renderFigure();
+
+        onRenderFcts.push(function(){
+            surface.rotation.x += 0.03;
+            surface.rotation.y += 0.06;
+        })
+
+        onRenderFcts.push(function () {
+            renderer.render(scene, camera);
+        });
+
+    }
+
+    function animate_(last) {
+        requestAnimationFrame(function animate(nowMsec) {
+            requestAnimationFrame(animate);
+            lastTimeMsec = last || nowMsec - 1000 / 60
+            var deltaMsec = Math.min(200, nowMsec - lastTimeMsec)
+            lastTimeMsec = nowMsec
+            onRenderFcts.forEach(function (onRenderFct) {
+                onRenderFct(deltaMsec / 1000, nowMsec / 1000)
+            })
+        });
+    }
+
+</script>
+</body>
+</html>
+
