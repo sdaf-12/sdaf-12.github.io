@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>pract 1</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<body>
+<script src="three.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+
+    var sin = Math.sin, cos = Math.cos, pi = Math.PI;
+    var container;
+    var camera, scene, renderer, labGeometry, object;
+    var newMaterial = null;
+
+    //start
+    init();
+    animate();
+
+    function var8_cornucopia(u, v) {
+
+        const m = 0.2;
+        const p = 0.1;
+        const sizeMult = 5;
+
+        u = 4 * pi * (u - 0.05);
+        v = 2 * pi * (v - 0.05);
+
+        let x = sizeMult *
+            (Math.exp(m * u)
+                + Math.exp(p * u) * cos(v)) * cos(u);
+        let y = sizeMult *
+            (Math.exp(m * u)
+                + Math.exp(p * u) * cos(v)) * sin(u);
+        let z = sizeMult *
+            Math.exp(p * u) * sin(v);
+
+        return new THREE.Vector3(x,y,z);
+    }
+
+    function populateTexture() {
+        // texture picture
+        var loader = new THREE.TextureLoader();
+        loader.load(
+            // resource URL
+            './gawe.jpg',
+
+            // onLoad callback
+            function (texture) {
+                // in this example we create the material when the texture is loaded
+                newMaterial = new THREE.MeshBasicMaterial({
+                    map: texture
+                });
+
+                newMaterial.map = texture;
+                newMaterial.side = THREE.DoubleSide;
+
+                object.material = newMaterial;
+            },
+
+            // onProgress callback currently not supported
+            undefined,
+
+            // onError callback
+            function (err) {
+                console.error('An error happened.!!!!!!!!!!!!!!!!!!!');
+            }
+        );
+    }
+
+    function populateSurf() {
+        var material = new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide, wireframe: true});
+
+        labGeometry = new THREE.ParametricGeometry(var8_cornucopia, 120, 130);
+        object = new THREE.Mesh(labGeometry, material);
+
+        object.rotation.x = -1.57;
+
+        scene.add(object);
+    }
+
+    function initRenderer() {
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+    }
+
+    function populateControl() {
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.maxPolarAngle = Math.PI * 1.5;
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function init() {
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xFFFFFF);
+
+        camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(900, 800, 100);
+        camera.lookAt(0, 45, 0);
+
+        populateSurf();
+        initRenderer();
+        populateControl();
+        populateTexture();
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        var time = Date.now();
+        console.log(time);
+        render();
+    }
+
+    function render() {
+        labGeometry.verticesNeedUpdate = true;
+        renderer.render(scene, camera);
+    }
+
+</script>
+
+</body>
+</html>
