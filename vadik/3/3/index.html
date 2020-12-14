@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>pract 1</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<body>
+
+<div class="instr" style="position: absolute">
+
+    <h1>Guide:</h1>
+
+    <p style="color: blueviolet">1) Use this radio--buttons to adjust separation</p>
+    <label>
+        <input name="r1" type="radio" value="0.1" onchange="updateSeparation();">
+    </label> 1
+    <label>
+        <input name="r1" type="radio" value="0.3" onchange="updateSeparation();">
+    </label> 2
+    <label>
+        <input name="r1" type="radio" value="0.5" onchange="updateSeparation();">
+    </label> 3
+    <label>
+        <input name="r1" type="radio" value="0.7" onchange="updateSeparation();">
+    </label> 4
+    <label>
+        <input name="r1" type="radio" value="1" onchange="updateSeparation();">
+    </label> 5
+    <label>
+        <input name="r1" type="radio" value="1.2" onchange="updateSeparation();">
+    </label> 6
+
+    <p style="color: darkslategray">2) Use scroll to zoom</p>
+    <p style="display:inline; color: darkgreen">3) Use mouse manipulations to rotate</p>
+    <p style="display:inline; font-size: 26px"> OR </p>
+    <p style="display:inline; color: darkgoldenrod">4) Use dev-tools in Chrome OR your mobile device with gyroscope to rotate surface</p>
+
+</div>
+
+
+<script src="three.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="AnaglyphEffect.js"></script>
+<script src="DeviceOrientationControl.js"></script>
+<!--<script src="MathUtils.js"></script>-->
+
+<script>
+
+    var sin = Math.sin, cos = Math.cos, pi = Math.PI;
+    var container;
+    var camera, scene, renderer, labGeometry, object;
+    var newMaterial = null;
+    //second assignment
+    var anEff;
+    var separation = 1;
+    //third assignment
+    var devControl;
+
+
+    //start
+    init();
+    animate();
+
+    function var8_cornucopia(u, v) {
+
+        const m = 0.2;
+        const p = 0.1;
+        const sizeMult = 5;
+
+        u = 4 * pi * (u - 0.05);
+        v = 2 * pi * (v - 0.05);
+
+        let x = sizeMult *
+            (Math.exp(m * u)
+                + Math.exp(p * u) * cos(v)) * cos(u);
+        let y = sizeMult *
+            (Math.exp(m * u)
+                + Math.exp(p * u) * cos(v)) * sin(u);
+        let z = sizeMult *
+            Math.exp(p * u) * sin(v);
+
+        return new THREE.Vector3(x, y, z);
+    }
+
+    function populateTexture() {
+        // texture picture
+        var loader = new THREE.TextureLoader();
+        loader.load(
+            // resource URL
+            './gawe.jpg',
+
+            // onLoad callback
+            function (texture) {
+                // in this example we create the material when the texture is loaded
+                newMaterial = new THREE.MeshBasicMaterial({
+                    map: texture
+                });
+
+                newMaterial.map = texture;
+                newMaterial.side = THREE.DoubleSide;
+
+                object.material = newMaterial;
+            },
+
+            // onProgress callback currently not supported
+            undefined,
+
+            // onError callback
+            function (err) {
+                console.error('An error happened.!!!!!!!!!!!!!!!!!!!');
+            }
+        );
+    }
+
+    function populateSurf() {
+        var material = new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide, wireframe: true});
+
+        labGeometry = new THREE.ParametricGeometry(var8_cornucopia, 120, 130);
+        object = new THREE.Mesh(labGeometry, material);
+
+        object.rotation.x = -1.57;
+
+        devControl = new THREE.DeviceOrientationControls(object);
+
+        scene.add(object);
+    }
+
+    function initRenderer() {
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+    }
+
+    function populateControl() {
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.maxPolarAngle = Math.PI * 1.5;
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function populateAnaglyphic() {
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        anEff = new THREE.AnaglyphEffect(renderer);
+        anEff.setSize(width, height);
+    }
+
+    function populateCamera() {
+        camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(900, 800, 100);
+        camera.lookAt(0, 45, 0);
+    }
+
+    function populateScene() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xFFFFFF);
+    }
+
+    function init() {
+        container = document.createElement('div');
+        document.body.appendChild(container);
+        populateScene();
+        populateCamera();
+
+        populateSurf();
+        initRenderer();
+        populateControl();
+        populateTexture();
+        populateAnaglyphic();
+    }
+
+    function onAnEff() {
+        anEff.render(scene, camera, separation);
+    }
+
+    function updateSeparation() {
+        var rad = document.getElementsByName('r1');
+        for (var i = 0; i < rad.length; i++) {
+            if (rad[i].checked) {
+                console.log("separation" + rad[i].value);
+                separation = rad[i].value;
+            }
+        }
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onDeviceRotation() {
+        devControl.update();
+    }
+
+    function animate() {
+        //
+        requestAnimationFrame(animate);
+        //
+        var time = Date.now();
+        // console.log(time);
+        //
+        render();
+        //
+        onAnEff();
+        //
+        onDeviceRotation();
+    }
+
+    function render() {
+        labGeometry.verticesNeedUpdate = true;
+        renderer.render(scene, camera);
+    }
+
+</script>
+
+</body>
+</html>
