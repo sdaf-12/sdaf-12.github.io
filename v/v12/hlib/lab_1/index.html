@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>lab_1</title>
+</head>
+<body>
+<style>
+    body {
+        margin: 0;
+    }
+</style>
+<canvas id="threejs"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
+
+
+<script>
+    window.addEventListener('load', init);
+
+    function init() {
+
+        /**
+         * Monge Surface with a Cylindrical Directrix Surface
+         *  and with a Sinusoid as Meridian
+         * @param _alpha_
+         * @param _t_
+         * @returns {Vector3}
+         */
+        const STEP = 15; //STEP is num of turns
+        const r = 1; //radius
+        const d = 1;
+        const o = Math.PI / 2;
+        const alpha_0 = 0;
+        let x,y,z,alpha,t;
+        var mongeSurf_variant12 = function (u, v, v3d) {
+            alpha = u * STEP;
+            t = v * STEP;
+            x = r * Math.cos(alpha) - (r * (alpha_0 - alpha) + t * Math.cos(o) - r * Math.sin(d * t) * Math.sin(o)) * Math.sin(alpha);
+            y = r * Math.sin(alpha) + (r * (alpha_0 - alpha) + t * Math.cos(o) - r * Math.sin(d * t) * Math.sin(o)) * Math.cos(alpha);
+            z = t * Math.sin(o) + r * Math.sin(d * t) * Math.cos(o);
+            v3d.set(x,y,z);
+        };
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;;
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#threejs')
+        });
+        renderer.setSize(width, height);
+        renderer.setClearColor(0xffffff);
+
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            width / height,
+            1,
+            10000
+        );
+        // camera.position.set(0, 0, 1400);
+        camera.position.set(0, 0, 82);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        const container = new THREE.Object3D();
+        scene.add(container);
+
+        const bodymaterial = new THREE.MeshLambertMaterial(
+            {
+                color: 0xff0011,
+                side: THREE.DoubleSide
+            });
+        //new THREE.MeshLambertMaterial({ color: 0xff69b4 })
+
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        const ambientLight = new THREE.AmbientLight(0x999999);
+        scene.add(ambientLight);
+
+        const body = new THREE.Mesh(
+            new THREE.ParametricGeometry(mongeSurf_variant12, 60, 60),
+            bodymaterial
+        );
+        body.position.set(0, 0, 0); //(x,y,z)
+
+
+        scene.add(body);
+        container.add(body);
+
+        tick();
+
+        function tick() {
+            container.rotation.x += 0;
+            container.rotation.y += 0.015;
+            container.rotation.z += 0.0;
+            renderer.render(scene, camera);
+            requestAnimationFrame(tick);
+        }
+    }
+</script>
+</body>
+</html>

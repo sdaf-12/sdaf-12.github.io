@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>1</title>
+</head>
+<body>
+<style>
+    body {
+        margin: 0;
+    }
+</style>
+<canvas id="threejs"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
+<script>
+    window.addEventListener('load', init);
+    function init() {
+        var sin = Math.sin, cos = Math.cos, pi = Math.PI;
+
+        function variant(u, v, vect3) {
+
+                u *= 12 * Math.PI;
+                v *= 2 * Math.PI;
+
+                var R = 2;
+                var a = 0.5;
+
+                var x = (R + a * Math.cos(u/2)) * Math.cos(u/3) + a * Math.cos(u/3) * Math.cos(v - Math.PI);
+                var y = (R + a * Math.cos(u/2)) * Math.sin(u/3) + a * Math.sin(u/3) * Math.cos(v - Math.PI);
+                var z = a + Math.sin(u/2) + a * Math.sin (v - Math.PI);
+
+
+
+
+            vect3.set(x, y, z);
+        }
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;;
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#threejs')
+        });
+        renderer.setSize(width, height);
+        renderer.setClearColor(0xffffff);
+
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            width / height,
+            1,
+            10000
+        );
+        // camera.position.set(0, 0, 1400);
+        camera.position.set(0, 0,12);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        const container = new THREE.Object3D();
+        scene.add(container);
+
+        const bodymaterial = new THREE.MeshLambertMaterial({ color: 0xff0011 });
+        //new THREE.MeshLambertMaterial({ color: 0xff69b4 })
+
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        const ambientLight = new THREE.AmbientLight(0x999999);
+        scene.add(ambientLight);
+
+        const body = new THREE.Mesh(
+            new THREE.ParametricGeometry(variant, 60, 60),
+            bodymaterial
+        );
+        body.position.set(0, 0, 0); //(x,y,z)
+
+
+        scene.add(body);
+        container.add(body);
+
+        tick();
+
+        function tick() {
+            container.rotation.x += 0;
+            container.rotation.y += 0.015;
+            container.rotation.z += 0.0;
+            renderer.render(scene, camera);
+            requestAnimationFrame(tick);
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>1</title>
+</head>
+<body>
+<style>
+    body {
+        margin: 0;
+    }
+</style>
+<canvas id="threejs"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
+
+<script>
+    window.addEventListener('load', init);
+    function init() {
+        const width = 960;
+        const height = 420;
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#threejs')
+        });
+        renderer.setSize(width, height);
+        renderer.setClearColor(0xffffff);
+
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            width / height,
+            1,
+            10000
+        );
+        camera.position.set(0, 0, 1400);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        const container = new THREE.Object3D();
+        scene.add(container);
+
+        const bodymaterial = new THREE.MeshLambertMaterial({ color: 0xff0011 });
+        //new THREE.MeshLambertMaterial({ color: 0xff69b4 })
+
+        // const handmaterial = new THREE.MeshLambertMaterial({ color: 0xff69b4 })
+        // const eyematerial = new THREE.MeshPhongMaterial({ color: 0x0000ac })
+        // const eyebmaterial = new THREE.MeshPhongMaterial({ color: 0x000000 })
+        // const eyewmaterial = new THREE.MeshPhongMaterial({ color: 0xffffff })
+        // const cheakmaterial = new THREE.MeshPhongMaterial({ color: 0xff4583 })
+        // const legmaterial = new THREE.MeshLambertMaterial({ color: 0xff0011 })
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        const ambientLight = new THREE.AmbientLight(0x999999);
+        scene.add(ambientLight);
+
+        const bodypink = new THREE.Mesh(
+            new THREE.SphereGeometry(300,40,40), // 球体
+            bodymaterial
+        );
+        bodypink.position.set(0, 0, 0); //(x,y,z)
+
+        // const eyeleft = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 35 * Math.sin(u) * Math.cos(v);
+        //         var y = 70 * Math.sin(u) * Math.sin(v);
+        //         var z = 30 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     eyematerial
+        // );
+        // eyeleft.position.set(-60, 20, 280); //(x,y,z)
+        //
+        // const eyeright = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 35 * Math.sin(u) * Math.cos(v);
+        //         var y = 70 * Math.sin(u) * Math.sin(v);
+        //         var z = 33 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     eyematerial
+        // );
+        // eyeright.position.set(60, 20, 280); //(x,y,z)
+        //
+        // const eyeleftb = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 33 * Math.sin(u) * Math.cos(v);
+        //         var y = 60 * Math.sin(u) * Math.sin(v);
+        //         var z = 30 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     eyebmaterial
+        // );
+        // eyeleftb.position.set(-60, 25, 284); //(x,y,z)
+        //
+        // const eyerightb = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 33 * Math.sin(u) * Math.cos(v);
+        //         var y = 60 * Math.sin(u) * Math.sin(v);
+        //         var z = 33 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     eyebmaterial
+        // );
+        // eyerightb.position.set(60, 25, 284); //(x,y,z)
+        //
+        // const eyeleftw = new THREE.Mesh(
+        //     new THREE.SphereGeometry(30,40,40), // 球体
+        //     eyewmaterial
+        // );
+        // eyeleftw.position.set(-60, 38, 287); //(x,y,z)
+        //
+        // const eyerightw = new THREE.Mesh(
+        //     new THREE.SphereGeometry(31.5,40,40), // 球体
+        //     eyewmaterial
+        // );
+        // eyerightw.position.set(60, 38, 287); //(x,y,z)
+
+        // const handleft = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 150 * Math.sin(u) * Math.cos(v);
+        //         var y = 75 * Math.sin(u) * Math.sin(v);
+        //         var z = 75 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     handmaterial
+        // );
+        // handleft.position.set(-280, 0, -30); //(x,y,z)
+        //
+        // const handright = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 150 * Math.sin(u) * Math.cos(v);
+        //         var y = 75 * Math.sin(u) * Math.sin(v);
+        //         var z = 75 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     handmaterial
+        // );
+        // handright.position.set(280, 0, -30); //(x,y,z)
+        //
+        // const cheakleft = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 65 * Math.sin(u) * Math.cos(v);
+        //         var y = 25 * Math.sin(u) * Math.sin(v);
+        //         var z = 30 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     cheakmaterial
+        // );
+        // cheakleft.position.set(-100, -60, 250); //(x,y,z)
+        //
+        // const cheakright = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 65 * Math.sin(u) * Math.cos(v);
+        //         var y = 25 * Math.sin(u) * Math.sin(v);
+        //         var z = 30 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     cheakmaterial
+        // );
+        // cheakright.position.set(100, -60, 250); //(x,y,z)
+        //
+        // const mouth = new THREE.Mesh(
+        //     new THREE.SphereGeometry(145,40,40), // 球体
+        //     legmaterial
+        // );
+        // mouth.position.set(0, -80, 145); //(x,y,z)
+        //
+        // const legleft = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 120 * Math.sin(u) * Math.cos(v);
+        //         var y = 55 * Math.sin(u) * Math.sin(v);
+        //         var z = 225 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     legmaterial
+        // );
+        // legleft.position.set(-150, -300, 70); //(x,y,z)
+        //
+        // const legright = new THREE.Mesh(
+        //     new THREE.ParametricGeometry(function(u,v,target){
+        //         u = u * Math.PI;
+        //         v = v * 2 * Math.PI;
+        //         var x = 120 * Math.sin(u) * Math.cos(v);
+        //         var y = 55 * Math.sin(u) * Math.sin(v);
+        //         var z = 225 * Math.cos(u);
+        //         target.set( x, y, z );
+        //     }, 64, 64, true),
+        //     legmaterial
+        // );
+        // legright.position.set(150, -300, 70); //(x,y,z)
+
+        // var curve = new THREE.EllipseCurve(
+        //     0,  0,            // ax, aY
+        //     50, 50,           // xRadius, yRadius
+        //     0,  2 * Math.PI,  // aStartAngle, aEndAngle
+        //     true,            // aClockwise
+        //     0                 // aRotation
+        // );
+        // var points = curve.getPoints( 200 );
+        // var geometry = new THREE.BufferGeometry().setFromPoints( points );
+        // var material = new THREE.LineBasicMaterial( { color : 0x000000 } );
+        // var ellipse1 = new THREE.Line( geometry, material );
+        // ellipse1.position.set( 0, -120, 500 );
+        // scene.add( ellipse1 );
+        //
+        // var curve = new THREE.EllipseCurve(
+        //     0,  0,            // ax, aY
+        //     70, 70,           // xRadius, yRadius
+        //     0,  2 * Math.PI,  // aStartAngle, aEndAngle
+        //     true,            // aClockwise
+        //     0                 // aRotation
+        // );
+        // var points2 = curve.getPoints( 200 );
+        // var geometry2 = new THREE.BufferGeometry().setFromPoints( points2 );
+        // var material2 = new THREE.LineBasicMaterial( { color : 0x000000 } );
+        // var ellipse2 = new THREE.Line( geometry2, material2 );
+        // ellipse2.position.set( 0, -120, 550 );
+        // scene.add( ellipse2 );
+        //
+        // var curve = new THREE.EllipseCurve(
+        //     0,  0,            // ax, aY
+        //     90, 90,           // xRadius, yRadius
+        //     0,  2 * Math.PI,  // aStartAngle, aEndAngle
+        //     true,            // aClockwise
+        //     0                 // aRotation
+        // );
+        // var points3 = curve.getPoints( 200 );
+        // var geometry3 = new THREE.BufferGeometry().setFromPoints( points3 );
+        // var material3 = new THREE.LineBasicMaterial( { color : 0x000000 } );
+        // var ellipse3 = new THREE.Line( geometry3, material3 );
+        // ellipse3.position.set( 0, -120, 600 );
+        // scene.add( ellipse3 );
+        //
+        // var curve = new THREE.EllipseCurve(
+        //     0,  0,            // ax, aY
+        //     110, 110,           // xRadius, yRadius
+        //     0,  2 * Math.PI,  // aStartAngle, aEndAngle
+        //     true,            // aClockwise
+        //     0                 // aRotation
+        // );
+        // var points4 = curve.getPoints( 200 );
+        // var geometry4 = new THREE.BufferGeometry().setFromPoints( points4 );
+        // var material4 = new THREE.LineBasicMaterial( { color : 0x000000 } );
+        // var ellipse4 = new THREE.Line( geometry4, material4 );
+        // ellipse4.position.set( 0, -120, 650 );
+        // scene.add( ellipse4 );
+        //
+        // var curve = new THREE.EllipseCurve(
+        //     0,  0,            // ax, aY
+        //     130, 130,           // xRadius, yRadius
+        //     0,  2 * Math.PI,  // aStartAngle, aEndAngle
+        //     true,            // aClockwise
+        //     0                 // aRotation
+        // );
+        // var points5 = curve.getPoints( 200 );
+        // var geometry5 = new THREE.BufferGeometry().setFromPoints( points5 );
+        // var material5 = new THREE.LineBasicMaterial( { color : 0x000000 } );
+        // var ellipse5 = new THREE.Line( geometry5, material5 );
+        // ellipse5.position.set( 0, -120, 700 );
+        // scene.add( ellipse5 );
+        //
+        // const ball = new THREE.Group(); //メッシュをグループ化
+        // ball.add(eyeleft,eyeright,eyeleftb,eyerightb,eyeleftw,eyerightw,bodypink,handleft,handright,cheakleft,cheakright,mouth,legleft,legright);
+        // scene.add(ball);
+        // container.add(ball,ellipse1,ellipse2,ellipse3,ellipse4,ellipse5);
+
+
+        scene.add(bodypink);
+        container.add(bodypink);
+
+        tick();
+
+        function tick() {
+            container.rotation.x += 0;
+            container.rotation.y += 0.015;
+            container.rotation.z += 0.0;
+            renderer.render(scene, camera);
+            requestAnimationFrame(tick);
+        }
+    }
+</script>
+</body>
+</html>

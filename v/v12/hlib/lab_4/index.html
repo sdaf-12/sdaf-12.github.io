@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>lab_4</title>
+</head>
+<body>
+
+<div id="divvv" style="margin: 0 auto; position: absolute; z-index: 10000;">
+    <div style="position: relative; z-index: 10000; margin: 0 auto;">
+        <input type="checkbox" id="genRnd"> Mark if you wanna generate Randomized EYE-separation every frame (BUT BE
+        CAREFUL WITH THIS) =D
+    </div>
+
+    <h3>or just </h3>
+
+    <div style="position: relative; z-index: 10000; margin: 0 auto;">
+        <input pattern="^\d*(\.\d{0,2})?$" type="number" id="inputSep" value="0" step="0.05" min="0" max="3"> input separation
+    </div>
+
+    <h3>Also you can drag surface using mouse touch (right ot left click and move) </h3>
+
+</div>
+
+
+<style>
+    body {
+        margin: 0;
+    }
+</style>
+<canvas id="threejs">
+</canvas>
+
+<script src="three.js"></script>
+<script src="3d/AnaglyphEffect.js"></script>
+<script src="device/DeviceOrientationControl.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="ar/lib/toolkit-ar/artoolkit.min.js"></script>
+<script src="ar/lib/toolkit-ar/artoolkit.api.js"></script>
+<script src="ar/lib/threex-ar/threex-artoolkitsource.js"></script>
+<script src="ar/lib/threex-ar/threex-artoolkitcontext.js"></script>
+<script src="ar/lib/threex-ar/threex-arbasecontrols.js"></script>
+<script src="ar/lib/threex-ar/threex-armarkercontrols.js"></script>
+<script>
+    window.addEventListener('load', init);
+
+
+    function init() {
+        /**
+         * Monge Surface with a Cylindrical Directrix Surface
+         *  and with a Sinusoid as Meridian
+         * @param _alpha_
+         * @param _t_
+         * @returns {Vector3}
+         */
+        const STEP = 15; //STEP is num of turns
+        const r = 1; //radius
+        const d = 1;
+        const o = Math.PI / 2;
+        const alpha_0 = 0;
+        let x,y,z,alpha,t;
+        var mongeSurf_variant12 = function (u, v) {
+            alpha = u * STEP;
+            t = v * STEP;
+            x = r * Math.cos(alpha) - (r * (alpha_0 - alpha) + t * Math.cos(o) - r * Math.sin(d * t) * Math.sin(o)) * Math.sin(alpha);
+            y = r * Math.sin(alpha) + (r * (alpha_0 - alpha) + t * Math.cos(o) - r * Math.sin(d * t) * Math.sin(o)) * Math.cos(alpha);
+            z = t * Math.sin(o) + r * Math.sin(d * t) * Math.cos(o);
+            return new THREE.Vector3(x, y, z);
+        };
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;;
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#threejs'),
+            antialias : true,
+            alpha: true
+        });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(width, height);
+        // renderer.setClearColor(0xffffff);
+
+        //anaglyph
+        var eyeDist = 1;
+        var anaglyphEffect = new THREE.AnaglyphEffect(renderer);
+        anaglyphEffect.setSize(width, height);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            width / height,
+            1,
+            10000
+        );
+        camera.position.set(0, 0, 90);
+        // camera.position.set(0, 0, 19);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+
+        //control
+        var orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+        // const container = new THREE.Object3D();
+        // scene.add(container);
+
+
+
+        let rootedElement, source, context;
+        initAugmentedReality();
+
+
+        const bodymaterial = new THREE.MeshLambertMaterial(
+            {
+                color: 0xff0011,
+                transparent: true,
+                opacity: 0.777,
+                side: THREE.DoubleSide
+            });
+
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(1, 1, 1);
+        rootedElement.add(directionalLight);
+        const ambientLight = new THREE.AmbientLight(0x999999);
+        rootedElement.add(ambientLight);
+        const body = new THREE.Mesh(
+            new THREE.ParametricGeometry(mongeSurf_variant12, 60, 60),
+            bodymaterial
+        );
+        body.position.set(10, -8, 10); //(x,y,z)
+        var deviceOrientationControls = new THREE.DeviceOrientationControls(body);
+        rootedElement.add(body);
+
+
+        /**
+         * 1) setup tools and context
+         * 2) establish marker
+         */
+        function initAugmentedReality() {
+            source = new THREEx.ArToolkitSource({
+                sourceType: 'webcam',
+            });
+
+            function resizeHandler() {
+                source.onResize();
+                source.copySizeTo(renderer.domElement);
+                if (context.arController !== null) {
+                    source.copySizeTo(context.arController.canvas)
+                }
+            }
+
+            source.init(function readyHandler() {
+                resizeHandler();
+            });
+            window.addEventListener('resize', function () {
+                resizeHandler();
+            });
+
+            context = new THREEx.ArToolkitContext({
+                cameraParametersUrl: 'ar/camera_para.dat',
+                detectionMode: 'mono'
+            });
+
+            context.init(function completeHandler() {
+                camera.projectionMatrix.copy(context.getProjectionMatrix());
+            });
+
+            rootedElement = new THREE.Group();
+            scene.add(rootedElement);
+
+            /**
+             * pattern control
+             */
+            new THREEx.ArMarkerControls(context, rootedElement, {
+                type: 'pattern', patternUrl: "ar/mycode.patt",
+            })
+        }
+
+        function updateAugmentedReality() {
+            if (rootedElement.visible)
+            {
+                scene.background = new THREE.Color('#343434');
+                body.rotation.y += 0.03;
+                body.rotation.z += 0.01;
+                document.getElementById("divvv").style.display = "none";
+            }
+            else
+            {
+                scene.background = undefined;
+                document.getElementById("divvv").style.display = "block";
+
+            }
+            // update artoolkit on every frame
+            if (source.ready !== false)
+            {
+                context.update(source.domElement);
+            }
+        }
+
+
+        //change frames
+        tick();
+
+        function tick() {
+            body.rotation.x += 0;
+            body.rotation.y += 0.015;
+            body.rotation.z += 0.0;
+            renderer.render(scene, camera);
+            requestAnimationFrame(tick);
+            renderAnaglyphEffect();
+            updateControl();
+            updateAugmentedReality();
+        }
+
+        function updateControl() {
+            orbitControls.update();
+            deviceOrientationControls.update()
+        }
+
+        function catchOrientationChange(event) {
+            var a = event.alpha;
+            var b = event.beta;
+            var g = event.gamma;
+            console.log("alpha = " + a + "; ")
+            console.log("beta = " + b + "; ")
+            console.log("gamma = " + g + "; ")
+        }
+
+        /**
+         * on window deviceorientation change
+         */
+        window.addEventListener("deviceorientation", catchOrientationChange, true);
+
+        function generateEyeSeparation(min, max) {
+            if (min > max) {
+                throw new Error('Minimum value should be smaller than maximum value.');
+            }
+            var range = max - min;
+            return min + range * Math.random();
+        }
+
+
+        function renderAnaglyphEffect() {
+            // todo clarify
+            // IT IS THE ONLY WAY TO CHANGE EYE SEPARATION
+            // anaglyphEffect.setSize(width, height, eyeDist);
+
+            // todo clarify why do i get "anaglyphEffect.setRenderTarget is not a function"
+            // anaglyphEffect.clear();
+            // anaglyphEffect.setSize(width, height, eyeDist);
+
+
+            anaglyphEffect.render(scene, camera);
+
+            const cb = document.getElementById('genRnd');
+            var isTrueGenerateRND = cb.checked;
+            console.log("checked" + cb.checked);
+
+            if (isTrueGenerateRND) {
+                let rndsep = generateEyeSeparation(0, 1);
+                eyeDist = rndsep;
+                anaglyphEffect.changeSeparation(rndsep);
+            } else {
+                const ib = document.getElementById('inputSep');
+                let sep = ib.value;
+                eyeDist = sep;
+
+                anaglyphEffect.changeSeparation(eyeDist);
+            }
+
+            console.log("call renderAnaglyphEffect with" + width + " " + height + " " + eyeDist)
+        }
+
+
+
+    }
+</script>
+</body>
+</html>

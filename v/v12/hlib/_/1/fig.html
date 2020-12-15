@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    var var11 = function (_u, _v) {
+        _u *=  12 * Math.PI;
+        _v *=  2 * Math.PI;
+
+        // let _u = u * 2 * Math.PI;
+        // let _v = v * 2 * Math.PI;
+
+        let c = 3 * _v;
+        let a = 8;
+        let r = Math.sqrt(c * c * Math.cos(2 * _u) +
+            Math.sqrt(a * a * a * a - c * c * c * c * Math.sin(2 * _u)));
+
+        var x = r * Math.cos(_u);
+        var y = r * Math.cos(_u);
+        var z = _v;
+
+        return new THREE.Vector3(x , y , z );
+    };
+</script>
+</body>
+</html>
