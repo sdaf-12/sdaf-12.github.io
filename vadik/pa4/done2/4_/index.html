@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>pract 4</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        /*canvas{*/
+        /*    !*margin-top: 50%;*!*/
+        /*    position: absolute;*/
+        /*    top:50%;*/
+        /*}*/
+
+        /*!*video{*!*/
+        /*!*    margin-top: -50%;*!*/
+        /*!*    position: absolute;*!*/
+        /*!*}*!*/
+    </style>
+</head>
+<body>
+
+<!--<div class="instr" style="position: absolute">-->
+<!--    <h1>Guide:</h1>-->
+
+<!--    <p style="color: brown">1) Place marker in front of camera</p>-->
+
+<!--    <p style="color: blueviolet">2) Use this radio&#45;&#45;buttons to adjust separation</p>-->
+<!--    <label>-->
+<!--        <input name="r1" type="radio" value="0.01" onchange="updateSeparation();">-->
+<!--    </label> 1-->
+<!--    <label>-->
+<!--        <input name="r1" type="radio" value="0.03" onchange="updateSeparation();">-->
+<!--    </label> 2-->
+<!--    <label>-->
+<!--        <input name="r1" type="radio" value="0.05" onchange="updateSeparation();">-->
+<!--    </label> 3-->
+<!--    <label>-->
+<!--        <input name="r1" type="radio" value="0.07" onchange="updateSeparation();">-->
+<!--    </label> 4-->
+<!--    <label>-->
+<!--        <input name="r1" type="radio" value="0.1" onchange="updateSeparation();">-->
+<!--    </label> 5-->
+<!--    <label>-->
+<!--        <input name="r1" type="radio" value="0.12" onchange="updateSeparation();">-->
+<!--    </label> 6-->
+
+<!--    <br>-->
+<!--    <br>-->
+<!--    <p style="display:inline; color: darkgoldenrod">3) Use dev-tools in Chrome OR your mobile device with gyroscope to rotate surface</p>-->
+
+<!--</div>-->
+
+
+<script src="three.js"></script>
+<!--<script src="OrbitControls.js"></script>-->
+<!--<script src="AnaglyphEffect.js"></script>-->
+<!--<script src="DeviceOrientationControl.js"></script>-->
+<script src="ar.js"></script>
+
+<script>
+
+    //base
+    var sin = Math.sin, cos = Math.cos, pi = Math.PI;
+    // var container;
+    var camera, scene, renderer, labGeometry, object;
+    var newMaterial = null;
+    //second assignment
+    var anEff;
+    var separation = 0.1;
+    //third assignment
+    var devControl;
+
+    //fourth
+    var cachedFnctns = [];
+    var arToolkitSource,arToolkitContext, artoolkitMarker, smoothedRoot, smoothedControls, arWorldRoot;
+
+    //start
+    init();
+    var lastTimeMsec = null;
+    handleAnim(lastTimeMsec);
+
+    function var8_cornucopia(u, v) {
+
+        const m = 0.2;
+        const p = 0.1;
+        const sizeMult = 6;
+
+        u = 4 * pi * (u - 0.05);
+        v = 2 * pi * (v - 0.05);
+
+        let x = sizeMult *
+            (Math.exp(m * u)
+                + Math.exp(p * u) * cos(v)) * cos(u);
+        let y = sizeMult *
+            (Math.exp(m * u)
+                + Math.exp(p * u) * cos(v)) * sin(u);
+        let z = sizeMult *
+            Math.exp(p * u) * sin(v);
+
+        return new THREE.Vector3(x, y, z);
+    }
+
+    function prepareTexture() {
+        // texture picture
+        var loader = new THREE.TextureLoader();
+        loader.load(
+            // resource URL
+            './gawe.jpg',
+
+            // onLoad callback
+            function (texture) {
+                // in this example we create the material when the texture is loaded
+                newMaterial = new THREE.MeshBasicMaterial({
+                    map: texture
+                });
+
+                newMaterial.map = texture;
+                newMaterial.side = THREE.DoubleSide;
+
+                object.material = newMaterial;
+            },
+
+            // onProgress callback currently not supported
+            undefined,
+
+            // onError callback
+            function (err) {
+                console.error('An error happened.!!!!!!!!!!!!!!!!!!!');
+            }
+        );
+    }
+
+    function prepareSurf() {
+        var material = new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide, wireframe: true});
+
+        labGeometry = new THREE.ParametricGeometry(var8_cornucopia, 120, 130);
+        object = new THREE.Mesh(labGeometry, material);
+
+        object.rotation.x = -1.57;
+
+       // devControl = new THREE.DeviceOrientationControls(object);
+
+        arWorldRoot.add(object);
+        // scene.add(object);
+    }
+
+    function initRenderer() {
+        renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true
+        });
+        // renderer.setClearColor(new THREE.Color('lightgrey'), 0);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // renderer.domElement.style.position = 'absolute';
+        // renderer.domElement.style.top = '0px';
+        // renderer.domElement.style.left = '0px';
+        document.body.appendChild(renderer.domElement);
+        // renderer = new THREE.WebGLRenderer({alpha:true, antialias: true});
+        // renderer.setPixelRatio(window.devicePixelRatio);
+        // renderer.setSize(window.innerWidth, window.innerHeight);
+        // // container.appendChild(renderer.domElement);
+        // document.body.appendChild(renderer.domElement);
+    }
+
+    // function prepareControl() {
+    //     var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    //     controls.maxPolarAngle = Math.PI * 1.5;
+    //     window.addEventListener('resize', onWindowResize, false);
+    // }
+    //
+    // function prepareAnaglyphic() {
+    //     var width = window.innerWidth;
+    //     var height = window.innerHeight;
+    //     // anEff = new THREE.AnaglyphEffect(renderer);
+    //     // anEff.setSize(width, height);
+    // }
+
+    function prepareCamera() {
+        camera = new THREE.PerspectiveCamera(130, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set(0, 0 , 254);
+        // camera.position.set(900, 800, 100);
+        // camera.lookAt(0, 45, 0);
+    }
+
+    function prepareScene() {
+        scene = new THREE.Scene();
+        // scene.background = new THREE.Color(0xFFFFFF);
+    }
+
+
+    function prepareMarker() {
+        markerRoot = new THREE.Group;
+        scene.add(markerRoot);
+        artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+            type: 'pattern',
+            patternUrl: './i.patt'
+        })
+    }
+
+    function prepareArToolkitSrc() {
+        arToolkitSource = new THREEx.ArToolkitSource({
+            sourceType: 'webcam',
+        })
+
+        arToolkitSource.init(function onReady() {
+            onResize()
+        })
+
+        window.addEventListener('resize', function () {
+            onResize()
+        })
+
+
+        function onResize() {
+            arToolkitSource.onResizeElement()
+            arToolkitSource.copyElementSizeTo(renderer.domElement)
+            if (arToolkitContext.arController !== null) {
+                arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
+            }
+        }
+    }
+
+    function prepareArToolkitCtx() {
+        arToolkitContext = new THREEx.ArToolkitContext({
+            cameraParametersUrl: './camera-para.dat',
+            detectionMode: 'mono',
+            maxDetectionRate: 30,
+            canvasWidth: 80 * 3,
+            canvasHeight: 60 * 3,
+        })
+        arToolkitContext.init(function onCompleted() {
+            camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+        })
+
+        cachedFnctns.push(function () {
+            if (arToolkitSource.ready === false) return
+
+            arToolkitContext.update(arToolkitSource.domElement)
+            console.log(" arToolkitContext upd")
+
+        })
+    }
+
+    function prepareArRoot() {
+        smoothedRoot = new THREE.Group()
+        scene.add(smoothedRoot)
+        smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
+            lerpPosition: 0.4,
+            lerpQuaternion: 0.3,
+            lerpScale: 1,
+        })
+        cachedFnctns.push(function (delta) {
+            smoothedControls.update(markerRoot)
+            console.log(" smoothedControls")
+
+        })
+
+        arWorldRoot = smoothedRoot;
+    }
+
+    function processOnRenderChng() {
+        cachedFnctns.push(function () {
+            // object.rotation.x += 0.05;
+            console.log(" object.rotation.x")
+        })
+
+        cachedFnctns.push(function () {
+            renderer.render(scene, camera);
+            console.log("renderer.render(scene, camera);")
+        });
+    }
+
+    function init() {
+        // container = document.createElement('div');
+        // document.body.appendChild(container);
+
+        prepareScene();
+        prepareCamera();
+
+        initRenderer();
+        prepareArToolkitSrc();
+        prepareArToolkitCtx();
+
+        prepareMarker();
+        prepareArRoot();
+
+        prepareSurf();
+        processOnRenderChng();
+
+        // prepareControl();
+        prepareTexture();
+        // prepareAnaglyphic();
+    }
+
+    function onAnEff() {
+        anEff.render(scene, camera, separation);
+    }
+
+    function updateSeparation() {
+        var rad = document.getElementsByName('r1');
+        for (var i = 0; i < rad.length; i++) {
+            if (rad[i].checked) {
+                console.log("separation" + rad[i].value);
+                separation = rad[i].value;
+            }
+        }
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onDeviceRotation() {
+        devControl.update();
+    }
+
+
+    function handleAnim(last) {
+        requestAnimationFrame(function animate(nowMsec) {
+            requestAnimationFrame(animate);
+            lastTimeMsec = last || nowMsec - 1000 / 60
+            var deltaMsec = Math.min(200, nowMsec - lastTimeMsec)
+            lastTimeMsec = nowMsec
+            cachedFnctns.forEach(function (onRenderFct) {
+                onRenderFct(deltaMsec / 1000, nowMsec / 1000)
+            })
+            //
+            //onAnEff();
+            //
+            //onDeviceRotation();
+        });
+    }
+
+    // function render() {
+    //     labGeometry.verticesNeedUpdate = true;
+    //     renderer.render(scene, camera);
+    // }
+
+</script>
+
+</body>
+</html>
